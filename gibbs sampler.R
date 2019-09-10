@@ -6,11 +6,11 @@ source('gibbs functions.R')
 dat=read.csv('fake data.csv',as.is=T)
 
 #priors
-tau2=100
-mu0=0
+alpha=0.01
 
 #useful stuff
 max.time=max(dat$time1)
+nloc=ncol(dat)-1
 
 #starting values
 breakpt=mean(dat$time1)
@@ -18,7 +18,8 @@ breakpt=mean(dat$time1)
 ngibbs=10000
 for (i in 1:ngibbs){
   print(i)
-  breakpt=samp.move(breakpt=breakpt,max.time=max.time,dat=dat,tau2=tau2,mu0=mu0)   
+  breakpt=samp.move(breakpt=breakpt,max.time=max.time,dat=dat,
+                    alpha=alpha,nloc=nloc)   
 }
 length(breakpt)
-abline(v=breakpt,col='grey')
+abline(v=breakpt/nrow(dat),lty=3,col='green')

@@ -1,38 +1,26 @@
-get.summary.stats=function(breakpt,dat){
+get.summary.stats=function(breakpt,dat,nloc){
+  col.time1=which(colnames(dat)=='time1')
   breakpt1=c(0,breakpt,Inf)
   n=length(breakpt1)
-  res=matrix(NA,n-1,3)
-  colnames(res)=c('sum.x2','sum.x','n')
+  res=matrix(NA,n-1,nloc)
   for (i in 2:n){
     ind=which(breakpt1[i-1]<dat$time1 & dat$time1<breakpt1[i])
-    tmp=dat[ind,]
-    sum.x2=sum(tmp$obs^2)
-    sum.x=sum(tmp$obs)
-    n=length(ind)
-    res[i-1,]=c(sum.x2,sum.x,n)
+    tmp=dat[ind,-col.time1]
+    res[i-1,]=colSums(tmp)
   }
   res
 }
 #---------------------------------------------
-log.marg.likel=function(tau2,mu0,summary.stats){
-  #get sig2
-  inv.sig2=summary.stats[,'n']+(1/tau2)
-  sig2=1/inv.sig2
-  
-  #get mu1
-  num1=summary.stats[,'sum.x']+(1/tau2)*mu0
-  den1=summary.stats[,'n']+(1/tau2)
-  mu1=num1/den1
-  
-  #get pieces of equation
-  p1=summary.stats[,'n']*log(2*pi)
-  p2=log(sig2/tau2)
-  p3=(mu1^2)/sig2
-  p4=summary.stats[,'sum.x2']+((mu0^2)/tau2)
-  sum((1/2)*(-p1+p2+p3-p4))
+log.marg.likel=function(alpha,summary.stats,nloc){
+  #get ratio
+  lnum=rowSums(lgamma(alpha+summary.stats))
+  lden=lgamma(nloc*alpha+rowSums(summary.stats))
+  p2=sum(lnum)-sum(lden)
+  p1=nrow(summary.stats)*(lgamma(nloc*alpha)-nloc*lgamma(alpha))
+  p1+p2
 }
 #---------------------------------------------
-samp.move=function(breakpt,max.time,dat,tau2,mu0){
+samp.move=function(breakpt,max.time,dat,alpha,nloc){
   breakpt.old=breakpt
   p=length(breakpt)
   rand1=runif(1)	
@@ -67,12 +55,12 @@ samp.move=function(breakpt,max.time,dat,tau2,mu0){
   }
   
   #get sufficient statistics
-  stats.old=get.summary.stats(breakpt=breakpt.old,dat=dat)
-  stats.new=get.summary.stats(breakpt=breakpt.new,dat=dat)
+  stats.old=get.summary.stats(breakpt=breakpt.old,dat=dat,nloc=nloc)
+  stats.new=get.summary.stats(breakpt=breakpt.new,dat=dat,nloc=nloc)
   
   #get marginal loglikel
-  pold=log.marg.likel(tau2=tau2,mu0=mu0,summary.stats=stats.old)
-  pnew=log.marg.likel(tau2=tau2,mu0=mu0,summary.stats=stats.new)+log(p0)
+  pold=log.marg.likel(alpha=alpha,summary.stats=stats.old,nloc=nloc)
+  pnew=log.marg.likel(alpha=alpha,summary.stats=stats.new,nloc=nloc)+log(p0)
   prob=exp(pnew-pold)
   rand2=runif(1)
   
