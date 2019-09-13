@@ -12,15 +12,15 @@ seg.index=rep(1:nseg,times=partition)
 nloc=100
 prob=rdirichlet(nseg,rep(0.01,nloc))
 
-obs=matrix(NA,nobs,nloc)
+obs=rep(NA,nobs)
 for (i in 1:nobs){
-  obs[i,]=rmultinom(1,size=1,prob=prob[seg.index[i],])
+  tmp=rmultinom(1,size=1,prob=prob[seg.index[i],])
+  obs[i]=which(tmp==1)
 }
-image(obs)
-abline(v=cumsum(partition)/nobs)
+plot(obs)
+abline(v=cumsum(partition))
 
-colnames(obs)=paste0('loc',1:nloc)
-obs1=data.frame(obs)
+obs1=data.frame(loc.id=obs)
 obs1$time1=1:nobs
 
 setwd('U:\\GIT_models\\git_segmentation_model')

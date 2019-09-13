@@ -10,7 +10,7 @@ alpha=0.01
 
 #useful stuff
 max.time=max(dat$time1)
-nloc=ncol(dat)-1
+nloc=max(dat$loc.id)
 
 #starting values
 breakpt=mean(dat$time1)
@@ -22,4 +22,4 @@ for (i in 1:ngibbs){
                     alpha=alpha,nloc=nloc)   
 }
 length(breakpt)
-abline(v=breakpt/nrow(dat),lty=3,col='green')
+abline(v=breakpt,lty=3,col='green')

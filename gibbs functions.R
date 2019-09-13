@@ -1,12 +1,13 @@
 get.summary.stats=function(breakpt,dat,nloc){
-  col.time1=which(colnames(dat)=='time1')
   breakpt1=c(0,breakpt,Inf)
   n=length(breakpt1)
-  res=matrix(NA,n-1,nloc)
+  res=matrix(0,n-1,nloc)
   for (i in 2:n){
     ind=which(breakpt1[i-1]<dat$time1 & dat$time1<breakpt1[i])
-    tmp=dat[ind,-col.time1]
-    res[i-1,]=colSums(tmp)
+    tmp=dat[ind,'loc.id']
+    tmp1=table(tmp)
+    ind=as.numeric(names(tmp1))
+    res[i-1,ind]=tmp1
   }
   res
 }
