@@ -8,10 +8,9 @@ library(ggplot2)
 library(coda)
 library(raster)
 
-setwd("~/Documents/Snail Kite Project/Cat-Dirichlet Gibbs Sampler")
 source('gibbs functions2.R')
+source('helper functions.R')
 
-setwd("~/Documents/Snail Kite Project/Data")
 dat<- read.csv("Snail Kite Gridded Data.csv", header = T, sep = ",")
 
 #Update class and/or values of vars

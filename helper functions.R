@@ -39,25 +39,12 @@ grid.summary.table=function(dat,crs){  #dat must already have time.seg assigned
   proj4string(grid_5)<- crs
   grid_5[]<- 0
   grid.cell.locs<- coordinates(grid_5) %>% data.frame()
-  names(grid.cell.locs)<- c("grid.x", "grid.y")
+  names(grid.cell.locs)<- c("x", "y")
   grid.cell.locs$grid.cell<- 1:length(grid_5)
+  grid.coord<- grid.cell.locs[grid.cell.locs$grid.cell %in% dat$grid.cell,]
   
-  #filter by only cells visited by ID
-  dat<- left_join(dat,grid.cell.locs, by="grid.cell")
   
-  grid.cell.id<- unique(dat$grid.cell)
-  dat.cells=matrix(NA, length(grid.cell.id), 3)
-  
-  for (i in 1:length(grid.cell.id)) {
-    tmp<- dat %>% filter(grid.cell == grid.cell.id[i]) %>% dplyr::select(grid.cell,grid.x,grid.y) %>%
-      slice(n=1) %>% as.numeric()
-    
-    dat.cells[i,]<- tmp
-  }
-  
-  colnames(dat.cells)<- c("grid.cell","grid.x","grid.y")
-  
-  dat.cells
+  grid.coord
 }
 #------------------------------------------------
 k.select <- function(){  #to be used by kmeans.cluster()
