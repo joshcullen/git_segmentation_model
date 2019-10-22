@@ -30,59 +30,36 @@ get.summary.stats=function(breakpt,dat,nloc){
   res
 }
 #------------------------------------------------
-grid.summary.table=function(dat,crs){  #dat must already have time.seg assigned
+create.grid=function(dat,crs,extent,res,buffer) {
+  grid<- raster(extent + buffer)
+  res(grid)<- res
+  proj4string(grid)<- crs
+  grid[]<- 0
+  
+  grid
+}
+#------------------------------------------------
+grid.summary.table=function(dat,crs,extent,res,buffer){  #dat must already have time.seg assigned
   
   #create grid and extract coords per cell
-  grid_5<- raster(extent(min(dat$utmlong), max(dat$utmlong),
-                         min(dat$utmlat), max(dat$utmlat)) + 10000)
-  res(grid_5)<- 5000
-  proj4string(grid_5)<- crs
-  grid_5[]<- 0
-  grid.cell.locs<- coordinates(grid_5) %>% data.frame()
+  grid<- create.grid(dat=dat, crs=crs, extent=extent, res=res, buffer=buffer)
+  grid.cell.locs<- coordinates(grid) %>% data.frame()
   names(grid.cell.locs)<- c("x", "y")
-  grid.cell.locs$grid.cell<- 1:length(grid_5)
+  grid.cell.locs$grid.cell<- 1:length(grid)
   grid.coord<- grid.cell.locs[grid.cell.locs$grid.cell %in% dat$grid.cell,]
   
   
   grid.coord
 }
 #------------------------------------------------
-k.select <- function(){  #to be used by kmeans.cluster()
-  k <- readline("What is the value of k?  ")  
-  
-  k <- as.numeric(unlist(strsplit(k, ",")))
-  
-  set.seed(1)
-  
-  dat.kmeans<- kmeans(dat.cells[,-1], k)
-  dat.cells<- dat.cells %>% data.frame()
-  dat.cells$k.clust<- dat.kmeans$cluster
-  
-  return(dat.cells)
-  
-}
-#------------------------------------------------
-kmeans.cluster=function(dat.cells) {
-  store.val=matrix(NA,20,1)
-  
-  set.seed(1)
-  for (i in 1:20) {  #test from 1 to 20 clusters
-    tmp=kmeans(dat.cells[,-1], i)
-    store.val[i,]=tmp$betweenss / tmp$totss
-  }
-  
-  plot(store.val)
-  
-  if(interactive()) k.select()
-}
-#------------------------------------------------
-get.summary.stats_kmeans=function(dat){  #dat must have kclust assigned by obs
-  kclust=dat$k.clust
-  n=length(unique(dat$time.seg))
-  res=matrix(0,n,max(dat$k.clust))
-  for (i in 1:n){
-    ind=dat %>% filter(time.seg==i) %>% group_by(k.clust) %>% count()
-    res[i,ind$k.clust]=ind$n #takes count of each cluster within given time segment
-  }
-  res
+df.to.list=function(dat) {  #only for id as col in dat
+    id<- unique(dat$id)
+    n=length(id)
+    dat.list<- vector("list", n)
+    names(dat.list)<- id
+    
+    for (i in 1:length(id)) {
+      dat.list[[i]]<- dat[dat$id==id[i],]
+    }
+    dat.list
 }

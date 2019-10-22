@@ -1,7 +1,5 @@
 ### Data Prep for Time Segmentation Model ###
 
-setwd("~/Documents/Snail Kite Project/Data")
-
 library(dplyr)
 library(ggplot2)
 library(lubridate)

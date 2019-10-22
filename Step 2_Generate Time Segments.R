@@ -355,6 +355,7 @@ obs27$time1=1:nrow(obs27)
 
 nloc=ncol(obs)-1 #remove time1
 
+setwd("~/Documents/Snail Kite Project/Data/R Scripts/cluster_tsegments_loc")
 
 obs1.seg=get.summary.stats(obs1.breakpts,obs1,nloc)
 write.csv(obs1.seg, "ID1 Seg x Loc.csv", row.names = F)
@@ -379,18 +380,8 @@ dat19<- assign.time.seg(obs19.seg, obs19.breakpts, dat19)
 dat27=dat %>% filter(id==27)
 dat27<- assign.time.seg(obs27.seg, obs27.breakpts, dat27)
 
-dat.list<- list(`1`=dat1, `12`=dat12, `19`=dat19, `27`=dat27)
+dat<- rbind(dat1, dat12, dat19, dat27)
 
-#for use by clustering of segments with TSB prior
-#dat must already have time.seg column
+setwd("/Users/joshcullen/Documents/Snail Kite Project/Data/R Scripts/activity_center1")
+write.csv(dat, "Snail Kite Gridded Data_Seg.csv", row.names = F)
 
-kmeans.list<- vector("list", length(dat.list))
-
-for (i in 1:length(dat.list)) {
-dat.cells<- grid.summary.table(dat = dat.list[[i]], crs = CRS('+init=epsg:32617'))  #not working for IDs 12-27; check this function
-dat.cells<- kmeans.cluster(dat.cells)
-dat<- left_join(dat.list[[i]], dat.cells[,-c(2:3)], by = "grid.cell")
-obs.kmeans<- get.summary.stats_kmeans(dat)
-
-kmeans.list[[i]]<- obs.kmeans
-}
