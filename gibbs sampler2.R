@@ -25,20 +25,3 @@ for (i in 1:ngibbs){
   }
 list(breakpt=breakpt, store.param=store.param)
 }
-
-
-length(breakpt)
-abline(v=breakpt/nrow(dat),lty=3,col='green')
-
-
-## MCMC traceplots and diagnostics
-
-#create mcmc object for diags
-store.param.mcmc<- as.mcmc(store.param)
-
-#breakpts
-traceplot(store.param.mcmc[,1]); abline(h=nseg-1,col='red')
-
-#LML
-traceplot(store.param.mcmc[,2])
-
