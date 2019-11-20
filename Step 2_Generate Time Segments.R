@@ -8,8 +8,10 @@ source('gibbs functions2.R')
 source('helper functions.R')
 source('gibbs sampler2.R')
 
-dat<- read.csv("Snail Kite Gridded Data.csv", header = T, sep = ",")
+dat<- read.csv("Snail Kite Gridded Data_large.csv", header = T, sep = ",")
 dat.list<- df.to.list(dat = dat)
+
+
 
 ############################################
 #### Create Grid Occupancy Matrix by ID ####
@@ -41,6 +43,23 @@ obs19=data.frame(obs) %>% filter(id == 19) %>% dplyr::select(-id) %>% mutate(tim
 obs27=data.frame(obs) %>% filter(id == 27) %>% dplyr::select(-id) %>% mutate(time1=1:nrow(.))
 
 nloc=ncol(obs)-1
+
+
+
+
+### Alternative Format for Data ###
+
+dat.list<- lapply(dat.list, function(x) x %>% mutate(time1 = 1:nrow(x)))  #add row for obs number
+
+dat.ind<- map_dfr(dat.list, `[`) %>% dplyr::select(id, grid.cell, time1)  #create DF
+names(dat.ind)[2]<- "loc.id"
+dat.ind$loc.id<- dat.ind$loc.id %>% factor()
+levels(dat.ind$loc.id)<- 1:length(unique(dat.ind$loc.id))  #change from raw to modified cell ID
+
+# write.csv(dat.ind, "Snail Kite Data_condensed.csv", row.names = F)
+
+
+
 
 
 #################################
