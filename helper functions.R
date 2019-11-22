@@ -46,7 +46,7 @@ df.to.list=function(dat) {  #only for id as col in dat
     dat.list
 }
 #------------------------------------------------
-traceplot=function(data, type) {  #create traceplots for nbrks or LML for all IDs
+traceplot=function(data, type, identity) {  #create traceplots for nbrks or LML for all IDs
   for (i in 1:length(identity)) {
     par(ask=TRUE)
     plot(x=1:ngibbs, y=data[i,-1], type = "l", xlab = "Iteration",
@@ -56,7 +56,7 @@ traceplot=function(data, type) {  #create traceplots for nbrks or LML for all ID
   on.exit(par(ask = FALSE))
 }
 #------------------------------------------------
-plot.heatmap=function(data) {
+plot.heatmap=function(data, identity, dat.res) {
   
   #re-define loc.id based only on those visited by this individual
   uni.loc=unique(data$loc.id)
@@ -92,15 +92,16 @@ plot.heatmap=function(data) {
       geom_vline(data = breakpt, aes(xintercept = breaks), color = viridis(n=9)[7], size = 0.35) +
       labs(x = "Observations", y = "Grid Cell") +
       theme_bw() +
-      theme(axis.title = element_text(size = 18), axis.text = element_text(size = 16)) +
+      theme(axis.title = element_text(size = 18), axis.text = element_text(size = 16),
+            title = element_text(size = 20, face = "bold")) +
       labs(title = paste("ID", unique(data$id)))
   )
   
   
 }
 #------------------------------------------------
-heatmap=function(data) {
+heatmap=function(data, identity, dat.res) {
   par(ask = TRUE)
-  map(data, plot.heatmap)
+  map(data, ~plot.heatmap(., identity = identity, dat.res = dat.res))
   par(ask = FALSE)
 }

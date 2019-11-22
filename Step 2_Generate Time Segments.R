@@ -1,12 +1,10 @@
 #Analyze Snail Kite Data with Bayesian Partitioning Model
 
-library(dplyr)
-library(purrr)
-library(ggplot2)
-library(raster)
+library(tidyverse)
 library(progress)
 library(furrr)
 library(tictoc)
+library(viridis)
 
 source('gibbs functions2.R')
 source('helper functions.R')
@@ -38,9 +36,14 @@ dat.list2<- df.to.list(dat.long)
 identity<- unique(dat.long$id)
 ngibbs = 10000
 
-#Run Gibbs sampler
+## Run Gibbs sampler
+plan(multiprocess)  #run all MCMC chains in parallel
+                    #select "multiprocess" if Unix or macOS & "multisession" if Windows
+                    #refer to future::plan() for more details
+
 dat.res<- space_segment(data = dat.list2, identity = identity, ngibbs = ngibbs)
 ###Takes 11.41 min to run for 10000 iterations for all IDs
+
 
 #Number of breakpoints by ID
 dat.res$brkpts[,-1] %>% apply(1, function(x) sum(!is.na(x)))
@@ -49,11 +52,11 @@ dat.res$brkpts[,-1] %>% apply(1, function(x) sum(!is.na(x)))
 ## Traceplots
 #type is either 'nbrks' or 'LML' for y-axis label
 
-traceplot(dat.res$nbrks, type = "nbrks")
-traceplot(dat.res$LML, type = "LML")
+traceplot(data = dat.res$nbrks, type = "nbrks", identity = identity)
+traceplot(data = dat.res$LML, type = "LML", identity = identity)
 
 ## Heatmaps
-heatmap(dat.list2)
+heatmap(data = dat.list2, identity = identity, dat.res = dat.res)
 
 
 ######################################

@@ -2,7 +2,6 @@ gibbs.time.seg=function(k, identity, ngibbs) {
   set.seed(1)
   
   uni.id=unique(k$id)
-  n.id=length(identity)
   
   #priors
   alpha=0.01
@@ -16,7 +15,7 @@ gibbs.time.seg=function(k, identity, ngibbs) {
   #re-define loc.id based only on those visited by this individual
   uni.loc=unique(k$loc.id)
   aux=data.frame(loc.id=uni.loc,loc.id1=1:length(uni.loc))
-  dat1=merge(k,aux,all=T); dim(k); dim(dat1)
+  dat1=merge(k,aux,all=T)
   dat1$loc.id=dat1$loc.id1
   dat=dat1[order(dat1$time1),c('loc.id','time1')]
     
@@ -56,7 +55,6 @@ gibbs.time.seg=function(k, identity, ngibbs) {
 #----------------------------------------------------
 space_segment=function(data, identity, ngibbs) {
   
-  plan(multiprocess)  #run all MCMC chains in parallel
   tic()  #start timer
   mod<- future_map(data, function(x) gibbs.time.seg(k = x, identity = identity, ngibbs = ngibbs),
                    .progress = TRUE)
