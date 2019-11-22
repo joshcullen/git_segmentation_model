@@ -1,25 +1,13 @@
-ind.func=function(x) {which(x==1)}
-#------------------------------------------------
-
-
 get.summary.stats=function(breakpt,dat,nloc){
-  col.time1=which(colnames(dat)=='time1')
   breakpt1=c(0,breakpt,Inf)
   n=length(breakpt1)
-  res=matrix(NA,n-1,nloc)
+  res=matrix(0,n-1,nloc)
   for (i in 2:n){
     ind=which(breakpt1[i-1]<dat$time1 & dat$time1<breakpt1[i])
-    tmp=dat[ind,-col.time1]
-    
-    ind.loc<- matrix(NA, nrow(tmp), 1)
-    ind.loc<- apply(tmp, 1, FUN = ind.func)  #creates vector of locations occupied per observation
-    
-    tab<- tabulate(ind.loc)  #ensures that there are values for all nloc
-    if (length(tab) < nloc) {
-      tab<- c(tab,rep(0,nloc-length(tab)))
-    }
-    
-    res[i-1,]=tab #takes count of the each location within given time segment
+    tmp=dat[ind,'loc.id']
+    tmp1=table(tmp)
+    ind=as.numeric(names(tmp1))
+    res[i-1,ind]=tmp1
   }
   res
 }
@@ -79,6 +67,4 @@ samp.move=function(breakpt,max.time,dat,alpha,nloc){
   
   if (rand2<prob) return(list(breakpt.new, pnew))
   return(list(breakpt.old, pold))
-  
 }
-

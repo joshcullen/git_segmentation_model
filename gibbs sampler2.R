@@ -1,27 +1,79 @@
-gibbs.time.seg=function(dat,ngibbs) {
-set.seed(1)
-
-#priors
-alpha=0.01
-
-#useful stuff
-max.time=max(dat$time1)
-nloc=ncol(dat)-1
-
-#starting values
-breakpt=mean(dat$time1)
-
-#matrix to store results
-store.param=matrix(NA,ngibbs,2)
-
-for (i in 1:ngibbs){
-  print(i)
-  vals<- samp.move(breakpt=breakpt,max.time=max.time,dat=dat,
-                   alpha=alpha,nloc=nloc)
-  breakpt=vals[[1]]
+gibbs.time.seg=function(k, identity, ngibbs) {
+  set.seed(1)
   
-  #store results
-  store.param[i,]=c(length(vals[[1]]), vals[[2]])
+  uni.id=unique(k$id)
+  n.id=length(identity)
+  
+  #priors
+  alpha=0.01
+  
+  #to store results
+  res.gibbs=matrix(NA,1,100)
+  res.LML=matrix(NA,1,(ngibbs+1))
+  res.nbrks=matrix(NA,1,(ngibbs+1))
+  store.param=matrix(NA,ngibbs,2)
+    
+  #re-define loc.id based only on those visited by this individual
+  uni.loc=unique(k$loc.id)
+  aux=data.frame(loc.id=uni.loc,loc.id1=1:length(uni.loc))
+  dat1=merge(k,aux,all=T); dim(k); dim(dat1)
+  dat1$loc.id=dat1$loc.id1
+  dat=dat1[order(dat1$time1),c('loc.id','time1')]
+    
+  #useful stuff
+  max.time=max(dat$time1)
+  nloc=max(dat$loc.id)
+  
+  #starting values
+  breakpt=mean(dat$time1)
+  
+  for (i in 1:ngibbs){
+    vals=samp.move(breakpt=breakpt,max.time=max.time,dat=dat,
+                   alpha=alpha,nloc=nloc)  
+    breakpt=vals[[1]]
+    
+    #store results
+    store.param[i,]=c(length(vals[[1]]), vals[[2]])  # nbrks and LML
   }
-list(breakpt=breakpt, store.param=store.param)
+  
+  tmp=c(uni.id,breakpt)
+  res.gibbs[1, 1:length(tmp)]=tmp
+  colnames(res.gibbs)<- c('id', paste0("Brk_",1:99))
+  
+  tmp=store.param[,1]
+  res.nbrks[1,]=c(uni.id,tmp)
+  colnames(res.nbrks)<- c('id', paste0("Iter_",1:ngibbs))
+  
+  tmp=store.param[,2]
+  res.LML[1,]=c(uni.id,tmp)
+  colnames(res.LML)<- c('id', paste0("Iter_",1:ngibbs))
+    
+  list(breakpt=res.gibbs, nbrks=res.nbrks, LML=res.LML)
 }
+
+
+
+#----------------------------------------------------
+space_segment=function(data, identity, ngibbs) {
+  
+  plan(multiprocess)  #run all MCMC chains in parallel
+  tic()  #start timer
+  mod<- future_map(data, function(x) gibbs.time.seg(k = x, identity = identity, ngibbs = ngibbs),
+                   .progress = TRUE)
+  toc()  #provide elapsed time
+  
+  
+  brkpts<- map_dfr(mod, 1) %>% t() %>% data.frame()  #create DF of breakpoints by ID
+  names(brkpts)<- c('id', paste0("Brk_",1:99))
+  
+  nbrks<- map_dfr(mod, 2) %>% t() %>% data.frame()  #create DF of number of breakpoints by ID
+  names(nbrks)<- c('id', paste0("Iter_",1:ngibbs))
+  
+  LML<- map_dfr(mod, 3) %>% t() %>% data.frame()  #create DF of LML by ID
+  names(LML)<- c('id', paste0("Iter_",1:ngibbs))
+  
+  
+  list(brkpts = brkpts, nbrks = nbrks, LML = LML)
+}
+
+
