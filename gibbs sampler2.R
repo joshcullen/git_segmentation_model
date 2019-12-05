@@ -53,7 +53,7 @@ gibbs.time.seg=function(k, identity, ngibbs) {
 
 
 #----------------------------------------------------
-space_segment=function(data, identity, ngibbs) {
+space_segment=function(data, identity, ngibbs, brk.cols) {
   
   tic()  #start timer
   mod<- future_map(data, function(x) gibbs.time.seg(k = x, identity = identity, ngibbs = ngibbs),
@@ -62,7 +62,7 @@ space_segment=function(data, identity, ngibbs) {
   
   
   brkpts<- map_dfr(mod, 1) %>% t() %>% data.frame()  #create DF of breakpoints by ID
-  names(brkpts)<- c('id', paste0("Brk_",1:99))
+  names(brkpts)<- c('id', paste0("Brk_",1:brk.cols))
   
   nbrks<- map_dfr(mod, 2) %>% t() %>% data.frame()  #create DF of number of breakpoints by ID
   names(nbrks)<- c('id', paste0("Iter_",1:ngibbs))
