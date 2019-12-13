@@ -5,10 +5,10 @@ assign.time.seg=function(dat){
   n=length(breakpt1)
   res=matrix(0,nrow(dat),1)
   for (i in 2:n){
-    ind=which(breakpt1[i-1]<dat$time1 & dat$time1<breakpt1[i])
+    ind=which(breakpt1[i-1]<=dat$time1 & dat$time1<breakpt1[i])
     res[ind,]=i-1
   }
-  dat$time.seg<- as.vector(res)
+  dat$tseg<- as.vector(res)
   dat
 }
 #------------------------------------------------
@@ -56,7 +56,7 @@ traceplot=function(data, type, identity) {  #create traceplots for nbrks or LML 
   on.exit(par(ask = FALSE))
 }
 #------------------------------------------------
-plot.heatmap=function(data, identity, dat.res) {
+plot.heatmap.loc=function(data, identity, dat.res) {
   
   #re-define loc.id based only on those visited by this individual
   uni.loc=unique(data$loc.id)
@@ -77,6 +77,8 @@ plot.heatmap=function(data, identity, dat.res) {
   names(obs)<- 1:nloc
   obs.long<- obs %>% gather(key, value) %>% mutate(time=rep(1:nobs, times=nloc))
   obs.long$key<- as.numeric(obs.long$key)
+  obs.long$value<- factor(obs.long$value)
+  levels(obs.long$value)<- c("Absence","Presence")
   
   tmp=which(unique(data$id) == identity)
   breakpt<- dat.res$brkpts[tmp,-1] %>% discard(is.na) %>% t() %>% data.frame()
@@ -86,22 +88,29 @@ plot.heatmap=function(data, identity, dat.res) {
   print(
     ggplot(obs.long, aes(x=time, y=key, fill=value)) +
       geom_tile() +
-      scale_fill_viridis_c(guide=F) +
+      scale_fill_viridis_d("") +
       scale_y_continuous(expand = c(0,0)) +
       scale_x_continuous(expand = c(0,0)) +
       geom_vline(data = breakpt, aes(xintercept = breaks), color = viridis(n=9)[7], size = 0.35) +
       labs(x = "Observations", y = "Grid Cell") +
       theme_bw() +
       theme(axis.title = element_text(size = 18), axis.text = element_text(size = 16),
-            title = element_text(size = 20, face = "bold")) +
+            title = element_text(size = 20)) +
       labs(title = paste("ID", unique(data$id)))
   )
   
   
 }
 #------------------------------------------------
-heatmap=function(data, identity, dat.res) {
-  par(ask = TRUE)
-  map(data, ~plot.heatmap(., identity = identity, dat.res = dat.res))
-  par(ask = FALSE)
+heatmap=function(data, identity, dat.res, type) {  #type can either be 'loc' or 'behav'
+  
+  if (type == "loc") {
+    par(ask = TRUE)
+    map(data, ~plot.heatmap.loc(., identity = identity, dat.res = dat.res))
+    par(ask = FALSE)
+  } else {
+    par(ask = TRUE)
+    map(data, ~plot.heatmap.behav(., identity = identity, dat.res = dat.res))
+    par(ask = FALSE)
+  }
 }

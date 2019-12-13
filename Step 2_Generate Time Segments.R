@@ -16,6 +16,9 @@ source('gibbs sampler2.R')
 ###############################
 
 dat<- read.csv("Snail Kite Gridded Data_larger.csv", header = T, sep = ",")
+
+#remove IDs w < 3 occupied grid cells
+dat<- dat %>% group_by(id) %>% filter(length(unique(grid.cell)) >= 3) %>% ungroup()
 dat.list<- df.to.list(dat = dat)
 dat.list<- map(dat.list, function(x) x %>% mutate(time1 = 1:length(x)))  #add row for obs number
 
@@ -42,7 +45,7 @@ plan(multisession)  #run all MCMC chains in parallel
                     #refer to future::plan() for more details
 
 dat.res<- space_segment(data = dat.list2, identity = identity, ngibbs = ngibbs, brk.cols = 99)
-###Takes 17.26 min to run for 10000 iterations for all IDs
+###Takes 20.83 min to run for 10000 iterations for all IDs
 
 
 #Number of breakpoints by ID
