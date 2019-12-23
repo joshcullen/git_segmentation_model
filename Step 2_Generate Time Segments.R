@@ -44,12 +44,8 @@ plan(multisession)  #run all MCMC chains in parallel
                     #select "multiprocess" if Unix or macOS & "multisession" if Windows
                     #refer to future::plan() for more details
 
-dat.res<- space_segment(data = dat.list2, identity = identity, ngibbs = ngibbs, brk.cols = 99)
-###Takes 20.83 min to run for 10000 iterations for all IDs
-
-
-#Number of breakpoints by ID
-dat.res$brkpts[,-1] %>% apply(1, function(x) sum(!is.na(x)))
+dat.res<- space_segment(data = dat.list2, identity = identity, ngibbs = ngibbs)
+###Takes 20 min to run for 10000 iterations for all IDs
 
 
 ## Traceplots
@@ -58,8 +54,14 @@ dat.res$brkpts[,-1] %>% apply(1, function(x) sum(!is.na(x)))
 traceplot(data = dat.res$nbrks, type = "nbrks", identity = identity)
 traceplot(data = dat.res$LML, type = "LML", identity = identity)
 
+
+## Determine maximum likelihood (ML) for selecting breakpoints
+ML<- apply(dat.res$LML, 1, function(x) getML(dat = x, nburn = 500))
+brkpts<- getBreakpts(dat = dat.res$brkpts, ML = ML, brk.cols = 99)  #brk.cols is max matrix cols
+
+
 ## Heatmaps
-heatmap(data = dat.list2, identity = identity, dat.res = dat.res)
+heatmap(data = dat.list2, brkpts = brkpts, dat.res = dat.res, type = "loc")
 
 
 ######################################

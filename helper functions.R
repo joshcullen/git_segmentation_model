@@ -1,9 +1,11 @@
-assign.time.seg=function(dat){
-  tmp=which(unique(dat$id) == identity)
-  breakpt<- dat.res$brkpts[tmp,-1] %>% discard(is.na) %>% as.numeric(.[1,])
+assign.time.seg=function(dat){  #add tseg assignment to each obs
+  tmp=which(unique(dat$id) == brkpts$id)
+  breakpt<- brkpts[tmp,-1] %>% discard(is.na) %>% as.numeric(.[1,])
   breakpt1=c(0,breakpt,Inf)
+  tmp1<- which(diff(breakpt1) < 1)  #check for impossible time units
+  breakpt1[tmp1+1]<- breakpt1[(tmp1+1)] + 1  #fix impossible time units
   n=length(breakpt1)
-  res=matrix(0,nrow(dat),1)
+  res=matrix(NA,nrow(dat),1)
   for (i in 2:n){
     ind=which(breakpt1[i-1]<=dat$time1 & dat$time1<breakpt1[i])
     res[ind,]=i-1
@@ -55,8 +57,31 @@ traceplot=function(data, type, identity) {  #create traceplots for nbrks or LML 
   }
   on.exit(par(ask = FALSE))
 }
+#---------------------------------------------
+getML=function(dat,nburn) {  #select ML value that is beyond burn-in phase
+  if (which.max(dat[-1]) < nburn) {
+    ML<- dat[-1] %>% order(decreasing = T) %>% subset(. > nburn) %>% first()
+  } else {
+    ML<- which.max(dat[-1])
+  }
+  return(ML)
+}
+#---------------------------------------------
+getBreakpts=function(dat,ML,brk.cols) {  #extract breakpoints of ML per ID
+  tmp<- matrix(NA, length(dat), brk.cols)
+  
+  for(i in 1:length(dat)) {
+    ind<- ML[i]
+    tmp[i,1:length(dat[[i]][[ind]])]<- round(dat[[i]][[ind]], 2)
+  }
+  
+  tmp<- cbind(id = identity, tmp) %>% data.frame()
+  names(tmp)<- c('id', paste0("Brk_",1:brk.cols))
+  tmp<- mutate_all(tmp, function(x) as.numeric(as.character(x)))
+  tmp
+}
 #------------------------------------------------
-plot.heatmap.loc=function(data, identity, dat.res) {
+plot.heatmap.loc=function(data, brkpts, dat.res) {
   
   #re-define loc.id based only on those visited by this individual
   uni.loc=unique(data$loc.id)
@@ -80,8 +105,8 @@ plot.heatmap.loc=function(data, identity, dat.res) {
   obs.long$value<- factor(obs.long$value)
   levels(obs.long$value)<- c("Absence","Presence")
   
-  tmp=which(unique(data$id) == identity)
-  breakpt<- dat.res$brkpts[tmp,-1] %>% discard(is.na) %>% t() %>% data.frame()
+  ind=which(unique(data$id) == brkpts$id)
+  breakpt<- brkpts[ind,-1] %>% discard(is.na) %>% t() %>% data.frame()
   names(breakpt)<- "breaks"
   
   
@@ -102,15 +127,17 @@ plot.heatmap.loc=function(data, identity, dat.res) {
   
 }
 #------------------------------------------------
-heatmap=function(data, identity, dat.res, type) {  #type can either be 'loc' or 'behav'
+heatmap=function(data, brkpts, dat.res, type) {  #type can either be 'loc' or 'behav'
   
   if (type == "loc") {
     par(ask = TRUE)
-    map(data, ~plot.heatmap.loc(., identity = identity, dat.res = dat.res))
+    map(data, ~plot.heatmap.loc(., brkpts = brkpts, dat.res = dat.res))
+    par(ask = FALSE)
+  } else if (type == "behav") {
+    par(ask = TRUE)
+    map(data, ~plot.heatmap.behav(., brkpts = brkpts, dat.res = dat.res))
     par(ask = FALSE)
   } else {
-    par(ask = TRUE)
-    map(data, ~plot.heatmap.behav(., identity = identity, dat.res = dat.res))
-    par(ask = FALSE)
+    stop("Need to select type as either 'loc' or 'behav'")
   }
 }

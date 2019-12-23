@@ -7,7 +7,7 @@ gibbs.time.seg=function(k, identity, ngibbs) {
   alpha=0.01
   
   #to store results
-  res.gibbs=matrix(NA,1,100)
+  res.brks=vector("list", ngibbs)
   res.LML=matrix(NA,1,(ngibbs+1))
   res.nbrks=matrix(NA,1,(ngibbs+1))
   store.param=matrix(NA,ngibbs,2)
@@ -24,7 +24,7 @@ gibbs.time.seg=function(k, identity, ngibbs) {
   nloc=max(dat$loc.id)
   
   #starting values
-  breakpt=mean(dat$time1)
+  breakpt=floor(mean(dat$time1))
   
   for (i in 1:ngibbs){
     vals=samp.move(breakpt=breakpt,max.time=max.time,dat=dat,
@@ -32,12 +32,9 @@ gibbs.time.seg=function(k, identity, ngibbs) {
     breakpt=vals[[1]]
     
     #store results
+    res.brks[[i]]<- breakpt
     store.param[i,]=c(length(vals[[1]]), vals[[2]])  # nbrks and LML
   }
-  
-  tmp=c(uni.id,breakpt)
-  res.gibbs[1, 1:length(tmp)]=tmp
-  colnames(res.gibbs)<- c('id', paste0("Brk_",1:99))
   
   tmp=store.param[,1]
   res.nbrks[1,]=c(uni.id,tmp)
@@ -47,13 +44,13 @@ gibbs.time.seg=function(k, identity, ngibbs) {
   res.LML[1,]=c(uni.id,tmp)
   colnames(res.LML)<- c('id', paste0("Iter_",1:ngibbs))
     
-  list(breakpt=res.gibbs, nbrks=res.nbrks, LML=res.LML)
+  list(breakpt=res.brks, nbrks=res.nbrks, LML=res.LML)
 }
 
 
 
 #----------------------------------------------------
-space_segment=function(data, identity, ngibbs, brk.cols) {
+space_segment=function(data, identity, ngibbs) {
   
   tic()  #start timer
   mod<- future_map(data, function(x) gibbs.time.seg(k = x, identity = identity, ngibbs = ngibbs),
@@ -61,8 +58,7 @@ space_segment=function(data, identity, ngibbs, brk.cols) {
   toc()  #provide elapsed time
   
   
-  brkpts<- map_dfr(mod, 1) %>% t() %>% data.frame()  #create DF of breakpoints by ID
-  names(brkpts)<- c('id', paste0("Brk_",1:brk.cols))
+  brkpts<- map(mod, 1)  #create list of all sets breakpoints by ID
   
   nbrks<- map_dfr(mod, 2) %>% t() %>% data.frame()  #create DF of number of breakpoints by ID
   names(nbrks)<- c('id', paste0("Iter_",1:ngibbs))
