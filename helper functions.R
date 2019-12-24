@@ -127,7 +127,7 @@ plot.heatmap.loc=function(data, brkpts, dat.res) {
   
 }
 #------------------------------------------------
-heatmap=function(data, brkpts, dat.res, type) {  #type can either be 'loc' or 'behav'
+plot.heatmap=function(data, brkpts, dat.res, type) {  #type can either be 'loc' or 'behav'
   
   if (type == "loc") {
     par(ask = TRUE)
