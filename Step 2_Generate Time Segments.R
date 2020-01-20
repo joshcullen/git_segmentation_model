@@ -15,7 +15,7 @@ source('gibbs sampler2.R')
 #### Load and Prepare Data ####
 ###############################
 
-dat<- read.csv("Snail Kite Gridded Data_larger.csv", header = T, sep = ",")
+dat<- read.csv("Snail Kite Gridded Data_TOHO.csv", header = T, sep = ",")
 
 #remove IDs w < 3 occupied grid cells
 dat.ex<- dat %>% group_by(id) %>% filter(length(unique(grid.cell)) < 3) %>% ungroup()
@@ -52,7 +52,7 @@ plan(multisession)  #run all MCMC chains in parallel
                     #refer to future::plan() for more details
 
 dat.res<- space_segment(data = dat.list2, identity = identity, ngibbs = ngibbs)
-###Takes 20 min to run for 10000 iterations for all IDs
+###Takes 8 min to run for 10000 iterations for all IDs
 
 
 ## Traceplots
@@ -82,5 +82,5 @@ dat_out<- rbind(dat_out, dat.ex)  #bring back in excluded data occupying < 3 cel
 dat_out<- dat_out[order(dat_out$id, dat_out$date),]  #reorder DF by id and date
 
 setwd("~/Documents/Snail Kite Project/Data/R Scripts/activcenter_subset_locations")
-write.csv(dat_out, "Snail Kite Gridded Data_larger.csv", row.names = F)
+write.csv(dat_out, "Snail Kite Gridded Data_TOHO.csv", row.names = F)
 

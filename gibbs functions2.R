@@ -26,7 +26,7 @@ samp.move=function(breakpt,max.time,dat,alpha,nloc){
   p=length(breakpt)
   rand1=runif(1)	
   p0=1
-  new.brk=sample(max.time,size=1)
+  new.brk=sample(2:max.time,size=1)  #don't propose a brkpt = 1
   
   if (p == 1) {
     #birth

@@ -53,7 +53,7 @@ traceplot=function(data, type, identity) {  #create traceplots for nbrks or LML 
     par(ask=TRUE)
     plot(x=1:ngibbs, y=data[i,-1], type = "l", xlab = "Iteration",
          ylab = ifelse(type == "nbrks", "# of Breakpoints", "Log Marginal Likelihood"),
-         main = paste("ID",data[i,1]))
+         main = paste("ID",levels(identity)[data[i,1]]))
   }
   on.exit(par(ask = FALSE))
 }
@@ -75,9 +75,10 @@ getBreakpts=function(dat,ML,brk.cols) {  #extract breakpoints of ML per ID
     tmp[i,1:length(dat[[i]][[ind]])]<- round(dat[[i]][[ind]], 2)
   }
   
-  tmp<- cbind(id = identity, tmp) %>% data.frame()
+  tmp<- data.frame(tmp)
+  tmp<- cbind(id = identity, tmp)
   names(tmp)<- c('id', paste0("Brk_",1:brk.cols))
-  tmp<- mutate_all(tmp, function(x) as.numeric(as.character(x)))
+  
   tmp
 }
 #------------------------------------------------
